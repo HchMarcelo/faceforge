@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceForge — Seu rosto, perfeito</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #1e1e1e;
+    --accent: #c8ff00;
+    --accent-dim: rgba(200,255,0,0.08);
+    --text: #e8e8e8;
+    --muted: #555;
+    --danger: #ff4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* GRAIN OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.6;
+  }
+
+  header {
+    width: 100%;
+    max-width: 900px;
+    padding: 48px 24px 0;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .logo span { color: var(--accent); }
+
+  .badge {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 900px;
+    padding: 48px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .intro {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    max-width: 420px;
+    line-height: 1.8;
+  }
+
+  /* STEP INDICATOR */
+  .steps {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .step {
+    flex: 1;
+    padding: 14px 20px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+  }
+
+  .step:last-child { border-right: none; }
+
+  .step.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .step.done {
+    color: var(--text);
+  }
+
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border: 1px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+
+  .step.done .step-num {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  /* PANELS */
+  .panel {
+    display: none;
+    flex-direction: column;
+    gap: 24px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .panel.visible { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* API KEY INPUT */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .field input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+  .field input::placeholder { color: var(--muted); }
+
+  .hint {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .hint a { color: var(--accent); text-decoration: none; }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 1px dashed var(--border);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-dim); }
+
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  .upload-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  .upload-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    margin-bottom: 8px;
+  }
+
+  .upload-sub {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+
+  /* PHOTO GRID */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+  }
+
+  .photo-thumb {
+    aspect-ratio: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .photo-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: grayscale(20%);
+  }
+
+  .photo-thumb .remove {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 20px; height: 20px;
+    background: rgba(0,0,0,0.8);
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .photo-thumb:hover .remove { opacity: 1; }
+
+  .photo-count {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .photo-count span { color: var(--accent); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 14px 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover { background: #d8ff20; }
+  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* PROGRESS */
+  .progress-block {
+    border: 1px solid var(--border);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+
+  .progress-label .status { color: var(--accent); }
+
+  .progress-bar {
+    height: 1px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--accent);
+    transition: width 0.5s ease;
+  }
+
+  .progress-fill.indeterminate {
+    width: 40%;
+    animation: slide 1.5s infinite ease-in-out;
+  }
+
+  @keyframes slide {
+    0% { left: -40%; }
+    100% { left: 100%; }
+  }
+
+  .log {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 2;
+    max-height: 120px;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .log-line { display: flex; gap: 12px; }
+  .log-time { color: var(--border); flex-shrink: 0; }
+  .log-msg.ok { color: var(--accent); }
+  .log-msg.err { color: var(--danger); }
+
+  /* RESULT */
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .result-grid { grid-template-columns: 1fr; } }
+
+  .result-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .result-card-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .result-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    filter: grayscale(10%);
+  }
+
+  .result-card img.result-img {
+    border-color: var(--accent);
+    box-shadow: 0 0 40px rgba(200,255,0,0.06);
+  }
+
+  /* MODEL ID DISPLAY */
+  .model-id-block {
+    border: 1px solid var(--accent);
+    background: var(--accent-dim);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .model-id-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .model-id-value {
+    font-size: 12px;
+    color: var(--text);
+    word-break: break-all;
+  }
+
+  /* STATUS DOT */
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ERROR */
+  .error-box {
+    border: 1px solid var(--danger);
+    padding: 16px 20px;
+    font-size: 11px;
+    color: var(--danger);
+    display: none;
+  }
+
+  .error-box.visible { display: block; }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 300;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Face<span>Forge</span></div>
+  <div class="badge">Prototype v0.1</div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h1>Seu rosto,<br><em>sempre perfeito</em></h1>
+    <p class="subtitle">Treina um modelo personalizado com suas fotos. Corrige qualquer imagem mantendo sua identidade real.</p>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="step active" id="step-1">
+      <div class="step-num">1</div>
+      <span>API Key</span>
+    </div>
+    <div class="step" id="step-2">
+      <div class="step-num">2</div>
+      <span>Suas Fotos</span>
+    </div>
+    <div class="step" id="step-3">
+      <div class="step-num">3</div>
+      <span>Treinar LoRA</span>
+    </div>
+    <div class="step" id="step-4">
+      <div class="step-num">4</div>
+      <span>Corrigir Foto</span>
+    </div>
+  </div>
+
+  <!-- PANEL 1: API KEY -->
+  <div class="panel visible" id="panel-1">
+    <div class="panel-label">// Configuração inicial</div>
+
+    <div class="field">
+      <label>Replicate API Key</label>
+      <input type="password" id="api-key" placeholder="r8_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+    </div>
+
+    <p class="hint">
+      Crie sua conta em <a href="https://replicate.com" target="_blank">replicate.com</a> →
+      Account Settings → API Tokens → Create token.<br>
+      A chave fica armazenada apenas no seu navegador, nunca enviada a servidores externos.
+    </p>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goToStep2()">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: UPLOAD FOTOS -->
+  <div class="panel" id="panel-2">
+    <div class="panel-label">// Upload das fotos de referência</div>
+
+    <p class="hint">
+      Envie entre 10 e 20 fotos suas onde você gosta do resultado.<br>
+      Variedade de ângulos, iluminações e expressões melhora muito o treino.
+    </p>
+
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" accept="image/*" multiple onchange="handleFiles(event)" />
+      <div class="upload-icon">⬚</div>
+      <div class="upload-title">Arraste ou clique para selecionar</div>
+      <div class="upload-sub">JPG, PNG, WEBP — máx. 10MB cada</div>
+    </div>
+
+    <div id="photo-count-wrap" style="display:none">
+      <p class="photo-count"><span id="photo-count-num">0</span> fotos selecionadas (mín. 10)</p>
+    </div>
+
+    <div class="photo-grid" id="photo-grid"></div>
+
+    <div class="error-box" id="error-upload"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goToStep1()">← Voltar</button>
+      <button class="btn btn-primary" id="btn-train" onclick="goToStep3()" disabled>Iniciar treino →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3: TREINO -->
+  <div class="panel" id="panel-3">
+    <div class="panel-label">// Treinando seu modelo pessoal</div>
+
+    <div class="progress-block">
+      <div class="progress-label">
+        <span style="display:flex;align-items:center;gap:8px"><div class="dot"></div> <span id="train-status">Iniciando treino...</span></span>
+        <span class="status" id="train-pct"></span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill indeterminate" id="train-bar"></div>
+      </div>
+      <div class="log" id="train-log"></div>
+    </div>
+
+    <p class="hint">
+      O treino leva entre 5–15 minutos dependendo da fila do Replicate.<br>
+      Você pode deixar esta aba aberta — ela verifica o progresso automaticamente.
+    </p>
+
+    <div class="error-box" id="error-train"></div>
+
+    <div id="model-id-block" class="model-id-block" style="display:none">
+      <div class="model-id-label">✓ Modelo treinado com sucesso</div>
+      <div class="model-id-value" id="model-id-value"></div>
+    </div>
+
+    <div class="btn-row" id="btn-row-step3" style="display:none">
+      <button class="btn btn-primary" onclick="goToStep4()">Corrigir uma foto →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 4: CORRIGIR FOTO -->
+  <div class="panel" id="panel-4">
+    <div class="panel-label">// Corrigir uma foto</div>
+
+    <div class="field">
+      <label>ID do modelo treinado</label>
+      <input type="text" id="model-version" placeholder="owner/model-name:version-hash" />
+    </div>
+
+    <div class="field">
+      <label>Prompt (descreva o resultado ideal)</label>
+      <input type="text" id="prompt-input" value="a photo of TOK person, natural smile, good lighting, sharp focus" />
+    </div>
+
+    <div class="upload-zone" id="upload-zone-fix" style="padding:24px">
+      <input type="file" accept="image/*" id="fix-photo-input" onchange="handleFixPhoto(event)" />
+      <div id="fix-zone-content">
+        <div class="upload-icon" style="font-size:24px;margin-bottom:8px">⬚</div>
+        <div class="upload-title" style="font-size:16px">Foto para corrigir</div>
+      </div>
+    </div>
+
+    <div class="error-box" id="error-fix"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goToStep3withModel()">← Voltar</button>
+      <button class="btn btn-primary" id="btn-fix" onclick="runFix()" disabled>Corrigir →</button>
+    </div>
+
+    <!-- PROCESSING -->
+    <div id="fix-progress" style="display:none">
+      <div class="progress-block">
+        <div class="progress-label">
+          <span style="display:flex;align-items:center;gap:8px"><div class="dot"></div> <span id="fix-status">Processando...</span></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill indeterminate" id="fix-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="fix-result" style="display:none">
+      <div class="divider" style="margin-bottom:24px"></div>
+      <div class="section-title" style="margin-bottom:16px">Resultado</div>
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="result-card-label">Original</div>
+          <img id="original-preview" src="" alt="Original" />
+        </div>
+        <div class="result-card">
+          <div class="result-card-label">Corrigida</div>
+          <img id="result-img" class="result-img" src="" alt="Resultado" />
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:20px">
+        <a id="download-link" class="btn btn-primary" download="faceforge-result.jpg">↓ Baixar</a>
+        <button class="btn btn-ghost" onclick="resetFix()">Corrigir outra →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== STATE =====
+let apiKey = '';
+let referencePhotos = [];
+let trainingId = '';
+let trainedModelVersion = '';
+let fixPhotoBase64 = '';
+let fixPhotoFile = null;
+let pollInterval = null;
+
+// ===== STEP NAVIGATION =====
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const step = document.getElementById(`step-${i}`);
+    const panel = document.getElementById(`panel-${i}`);
+    step.className = 'step';
+    panel.className = 'panel';
+    if (i < n) step.classList.add('done');
+    if (i === n) step.classList.add('active');
+    if (i === n) panel.classList.add('visible');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToStep1() { setStep(1); }
+
+function goToStep2() {
+  apiKey = document.getElementById('api-key').value.trim();
+  if (!apiKey || !apiKey.startsWith('r8_')) {
+    alert('Cole uma API key válida do Replicate (começa com r8_)');
+    return;
+  }
+  setStep(2);
+}
+
+function goToStep3() {
+  if (referencePhotos.length < 10) {
+    showError('error-upload', `Adicione pelo menos 10 fotos (você tem ${referencePhotos.length}).`);
+    return;
+  }
+  hideError('error-upload');
+  setStep(3);
+  startTraining();
+}
+
+function goToStep3withModel() {
+  setStep(3);
+  if (trainedModelVersion) {
+    document.getElementById('model-id-block').style.display = 'flex';
+    document.getElementById('btn-row-step3').style.display = 'flex';
+    document.getElementById('train-status').textContent = 'Modelo já treinado.';
+  }
+}
+
+function goToStep4() {
+  setStep(4);
+  document.getElementById('model-version').value = trainedModelVersion;
+}
+
+// ===== FILE HANDLING =====
+function handleFiles(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(file => {
+    if (referencePhotos.length >= 20) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      referencePhotos.push({ file, base64: e.target.result });
+      renderGrid();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById('photo-grid');
+  const countWrap = document.getElementById('photo-count-wrap');
+  const countNum = document.getElementById('photo-count-num');
+  const btnTrain = document.getElementById('btn-train');
+
+  grid.innerHTML = '';
+  referencePhotos.forEach((p, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `
+      <img src="${p.base64}" />
+      <button class="remove" onclick="removePhoto(${i})">×</button>
+    `;
+    grid.appendChild(thumb);
+  });
+
+  countWrap.style.display = referencePhotos.length > 0 ? 'block' : 'none';
+  countNum.textContent = referencePhotos.length;
+  btnTrain.disabled = referencePhotos.length < 10;
+}
+
+function removePhoto(i) {
+  referencePhotos.splice(i, 1);
+  renderGrid();
+}
+
+// ===== DRAG & DROP =====
+const uploadZone = document.getElementById('upload-zone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  files.forEach(file => {
+    if (referencePhotos.length >= 20) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      referencePhotos.push({ file, base64: ev.target.result });
+      renderGrid();
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+// ===== FIX PHOTO =====
+function handleFixPhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  fixPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    fixPhotoBase64 = e.target.result;
+    const content = document.getElementById('fix-zone-content');
+    content.innerHTML = `<img src="${fixPhotoBase64}" style="width:100%;max-height:200px;object-fit:contain" />`;
+    document.getElementById('btn-fix').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== TRAINING =====
+async function startTraining() {
+  addLog('Preparando imagens...');
+  document.getElementById('train-status').textContent = 'Enviando fotos...';
+
+  // Upload das imagens para o Replicate como URLs temporárias via data URI
+  // Na prática, o Replicate aceita URLs públicas. Para o protótipo, usamos
+  // o endpoint de fine-tuning com FLUX via zip ou URLs.
+  // Aqui vamos chamar a API de treino real do Replicate com FLUX LoRA.
+
+  try {
+    addLog('Criando modelo privado no Replicate...');
+
+    // 1. Criar modelo privado para receber o treino
+    const username = await getReplicateUsername();
+    const modelName = `faceforge-${Date.now()}`;
+
+    const createModel = await fetch('https://api.replicate.com/v1/models', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        owner: username,
+        name: modelName,
+        visibility: 'private',
+        hardware: 'gpu-a40-large',
+        description: 'FaceForge personal LoRA'
+      })
+    });
+
+    if (!createModel.ok) {
+      const err = await createModel.json();
+      throw new Error(`Erro ao criar modelo: ${JSON.stringify(err.detail || err)}`);
+    }
+
+    addLog(`Modelo criado: ${username}/${modelName}`, 'ok');
+    addLog('Preparando dataset de imagens...');
+
+    // 2. Converter fotos para URLs usando o endpoint de uploads do Replicate
+    const imageUrls = await uploadImagesToReplicate();
+    addLog(`${imageUrls.length} imagens enviadas.`, 'ok');
+
+    // 3. Iniciar treino FLUX LoRA
+    addLog('Iniciando fine-tuning FLUX LoRA...');
+    document.getElementById('train-status').textContent = 'Treinando... (5–15 min)';
+
+    const trainResp = await fetch('https://api.replicate.com/v1/trainings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: 'ostris/flux-dev-lora-trainer:4ffd32160efd92e956d39c5338a9b8fbafca58e03f791f6d8011f3e20e8ea6fa',
+        input: {
+          steps: 1000,
+          lora_rank: 16,
+          optimizer: 'adamw8bit',
+          batch_size: 1,
+          resolution: '512,768,1024',
+          autocaption: true,
+          input_images: imageUrls[0], // URL do zip com as imagens
+          trigger_word: 'TOK',
+          learning_rate: 0.0004,
+        },
+        destination: `${username}/${modelName}`,
+      })
+    });
+
+    if (!trainResp.ok) {
+      const err = await trainResp.json();
+      throw new Error(`Erro ao iniciar treino: ${JSON.stringify(err.detail || err)}`);
+    }
+
+    const training = await trainResp.json();
+    trainingId = training.id;
+    addLog(`Treino iniciado. ID: ${trainingId}`, 'ok');
+    pollTraining();
+
+  } catch (err) {
+    showError('error-train', err.message);
+    addLog(err.message, 'err');
+    document.getElementById('train-status').textContent = 'Erro.';
+  }
+}
+
+async function getReplicateUsername() {
+  const resp = await fetch('https://api.replicate.com/v1/account', {
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+  if (!resp.ok) throw new Error('API key inválida ou sem permissão.');
+  const data = await resp.json();
+  return data.username;
+}
+
+async function uploadImagesToReplicate() {
+  // O Replicate espera um ZIP de imagens como URL pública.
+  // Para o protótipo, vamos criar um ZIP via JSZip e fazer upload
+  // usando o endpoint de file uploads do Replicate.
+  
+  addLog('Comprimindo imagens em ZIP...');
+
+  // Carregar JSZip dinamicamente
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+
+  const zip = new JSZip();
+  referencePhotos.forEach((p, i) => {
+    const ext = p.file.type.split('/')[1] || 'jpg';
+    const base64Data = p.base64.split(',')[1];
+    zip.file(`image_${String(i+1).padStart(3,'0')}.${ext}`, base64Data, { base64: true });
+  });
+
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  addLog(`ZIP gerado: ${(zipBlob.size / 1024).toFixed(0)} KB`);
+
+  // Upload via Replicate Files API
+  const formData = new FormData();
+  formData.append('content', zipBlob, 'training_images.zip');
+
+  const uploadResp = await fetch('https://api.replicate.com/v1/files', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    body: formData
+  });
+
+  if (!uploadResp.ok) {
+    const err = await uploadResp.json();
+    throw new Error(`Erro no upload: ${JSON.stringify(err)}`);
+  }
+
+  const uploaded = await uploadResp.json();
+  addLog(`ZIP enviado com sucesso.`, 'ok');
+  return [uploaded.urls.get];
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function pollTraining() {
+  let dots = 0;
+  pollInterval = setInterval(async () => {
+    try {
+      const resp = await fetch(`https://api.replicate.com/v1/trainings/${trainingId}`, {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      });
+      const data = await resp.json();
+
+      const status = data.status;
+      dots = (dots + 1) % 4;
+      const dotStr = '.'.repeat(dots + 1);
+
+      if (status === 'processing' || status === 'starting') {
+        document.getElementById('train-status').textContent = `Treinando${dotStr}`;
+        if (data.logs) {
+          const lastLines = data.logs.split('\n').filter(Boolean).slice(-3);
+          lastLines.forEach(l => addLog(l));
+        }
+      }
+
+      if (status === 'succeeded') {
+        clearInterval(pollInterval);
+        trainedModelVersion = `${data.output?.version || data.urls?.get || ''}`;
+
+        // Pegar a version do modelo treinado
+        if (data.output && data.output.version) {
+          trainedModelVersion = data.output.version;
+        } else if (data.model) {
+          trainedModelVersion = data.model;
+        }
+
+        document.getElementById('train-status').textContent = 'Treino concluído!';
+        document.getElementById('train-bar').classList.remove('indeterminate');
+        document.getElementById('train-bar').style.width = '100%';
+        document.getElementById('model-id-value').textContent = trainedModelVersion;
+        document.getElementById('model-id-block').style.display = 'flex';
+        document.getElementById('btn-row-step3').style.display = 'flex';
+        addLog('Modelo pronto para uso!', 'ok');
+      }
+
+      if (status === 'failed' || status === 'canceled') {
+        clearInterval(pollInterval);
+        const errMsg = data.error || 'Treino falhou.';
+        showError('error-train', errMsg);
+        addLog(errMsg, 'err');
+        document.getElementById('train-status').textContent = 'Falhou.';
+      }
+
+    } catch (e) {
+      addLog(`Erro ao verificar status: ${e.message}`, 'err');
+    }
+  }, 8000);
+}
+
+// ===== RUN FIX =====
+async function runFix() {
+  const modelVersion = document.getElementById('model-version').value.trim();
+  const prompt = document.getElementById('prompt-input').value.trim();
+
+  if (!modelVersion) { showError('error-fix', 'Cole o ID do modelo treinado.'); return; }
+  if (!fixPhotoBase64) { showError('error-fix', 'Selecione uma foto para corrigir.'); return; }
+  hideError('error-fix');
+
+  document.getElementById('fix-progress').style.display = 'block';
+  document.getElementById('fix-result').style.display = 'none';
+  document.getElementById('btn-fix').disabled = true;
+  document.getElementById('fix-status').textContent = 'Enviando requisição...';
+
+  try {
+    // Fazer upload da imagem de referência
+    const imgBlob = await fetch(fixPhotoBase64).then(r => r.blob());
+    const formData = new FormData();
+    formData.append('content', imgBlob, 'face_ref.jpg');
+
+    const uploadResp = await fetch('https://api.replicate.com/v1/files', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData
+    });
+
+    let imageUrl = fixPhotoBase64;
+    if (uploadResp.ok) {
+      const up = await uploadResp.json();
+      imageUrl = up.urls.get;
+    }
+
+    document.getElementById('fix-status').textContent = 'Gerando imagem...';
+
+    const resp = await fetch('https://api.replicate.com/v1/predictions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: modelVersion,
+        input: {
+          prompt: prompt,
+          num_outputs: 1,
+          guidance_scale: 3.5,
+          num_inference_steps: 28,
+          lora_scale: 0.8,
+        }
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(JSON.stringify(err.detail || err));
+    }
+
+    const prediction = await resp.json();
+    pollFix(prediction.id);
+
+  } catch (err) {
+    showError('error-fix', err.message);
+    document.getElementById('fix-progress').style.display = 'none';
+    document.getElementById('btn-fix').disabled = false;
+  }
+}
+
+function pollFix(predictionId) {
+  const interval = setInterval(async () => {
+    try {
+      const resp = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      });
+      const data = await resp.json();
+
+      if (data.status === 'succeeded') {
+        clearInterval(interval);
+        const outputUrl = Array.isArray(data.output) ? data.output[0] : data.output;
+        showResult(outputUrl);
+      }
+
+      if (data.status === 'failed') {
+        clearInterval(interval);
+        showError('error-fix', data.error || 'Falhou.');
+        document.getElementById('fix-progress').style.display = 'none';
+        document.getElementById('btn-fix').disabled = false;
+      }
+
+      if (data.status === 'processing') {
+        document.getElementById('fix-status').textContent = 'Gerando... aguarde';
+      }
+
+    } catch (e) {
+      clearInterval(interval);
+      showError('error-fix', e.message);
+    }
+  }, 3000);
+}
+
+function showResult(outputUrl) {
+  document.getElementById('fix-progress').style.display = 'none';
+  document.getElementById('original-preview').src = fixPhotoBase64;
+  document.getElementById('result-img').src = outputUrl;
+  document.getElementById('download-link').href = outputUrl;
+  document.getElementById('fix-result').style.display = 'block';
+  document.getElementById('btn-fix').disabled = false;
+  document.getElementById('fix-result').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetFix() {
+  fixPhotoBase64 = '';
+  fixPhotoFile = null;
+  document.getElementById('fix-photo-input').value = '';
+  document.getElementById('fix-zone-content').innerHTML = `
+    <div class="upload-icon" style="font-size:24px;margin-bottom:8px">⬚</div>
+    <div class="upload-title" style="font-size:16px">Foto para corrigir</div>
+  `;
+  document.getElementById('btn-fix').disabled = true;
+  document.getElementById('fix-result').style.display = 'none';
+  hideError('error-fix');
+}
+
+// ===== UTILS =====
+function addLog(msg, type = '') {
+  const log = document.getElementById('train-log');
+  const now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${type}">${msg}</span>`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = `⚠ ${msg}`;
+  el.classList.add('visible');
+}
+
+function hideError(id) {
+  document.getElementById(id).classList.remove('visible');
+}
+</script>
+</body>
+</html>
