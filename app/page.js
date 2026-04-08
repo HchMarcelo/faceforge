@@ -83,19 +83,18 @@ export default function Home() {
       // 3. Upload ZIP
       addLog('Enviando imagens para o Replicate...', 'info')
       setTrainStatus('Enviando imagens...')
-      const zipBase64 = await new Promise(resolve => {
-  const reader = new FileReader()
-  reader.onload = e => resolve(e.target.result.split(',')[1])
-  reader.readAsDataURL(zipBlob)
-})
-const ur = await fetch(`/api/upload?apiKey=${encodeURIComponent(apiKey)}`, {
+      // Upload direto do browser para o Replicate
+const uploadForm = new FormData()
+uploadForm.append('content', zipBlob, 'training_images.zip')
+
+const ur = await fetch('https://api.replicate.com/v1/files', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ zipBase64, filename: 'training_images.zip' }),
+  headers: { Authorization: `Bearer ${apiKey}` },
+  body: uploadForm,
 })
-      const ud = await ur.json()
-      if (!ur.ok) throw new Error(ud.error)
-      addLog('Upload concluído.', 'ok')
+const ud = await ur.json()
+if (!ur.ok) throw new Error(JSON.stringify(ud))
+addLog('Upload concluído.', 'ok')
 
       // 4. Start training
       addLog('Iniciando FLUX LoRA trainer...', 'info')
