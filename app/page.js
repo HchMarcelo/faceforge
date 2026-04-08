@@ -83,11 +83,16 @@ export default function Home() {
       // 3. Upload ZIP
       addLog('Enviando imagens para o Replicate...', 'info')
       setTrainStatus('Enviando imagens...')
-      const form = new FormData()
-      form.append('file', zipBlob, 'training_images.zip')
-      const ur = await fetch(`/api/upload?apiKey=${encodeURIComponent(apiKey)}`, {
-        method: 'POST', body: form,
-      })
+      const zipBase64 = await new Promise(resolve => {
+  const reader = new FileReader()
+  reader.onload = e => resolve(e.target.result.split(',')[1])
+  reader.readAsDataURL(zipBlob)
+})
+const ur = await fetch(`/api/upload?apiKey=${encodeURIComponent(apiKey)}`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ zipBase64, filename: 'training_images.zip' }),
+})
       const ud = await ur.json()
       if (!ur.ok) throw new Error(ud.error)
       addLog('Upload concluído.', 'ok')
