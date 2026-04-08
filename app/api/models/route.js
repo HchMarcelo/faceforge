@@ -10,7 +10,7 @@ export async function POST(req) {
       owner: username,
       name: modelName,
       visibility: 'private',
-      hardware: 'gpu-a40-large',
+      hardware: 'gpu-t4',
       description: 'FaceForge personal LoRA',
     }),
   })
